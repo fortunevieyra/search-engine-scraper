@@ -35,7 +35,8 @@ For those who want to extend the app itself
 * Default Search       - app.config.defaultSearch
 
 
-## Usage
+## Usage - Configuration
+To make configuration changes, open the `./js/config.js` file.
 
 ### app.config.ajaxSettings
 
@@ -329,6 +330,48 @@ app.config.defaultSearch = [
     }
 ];
 ```
+
+## Usage - Extending
+To safely extend the app object, open the `./js/extend.js` file.
+
+### app.bind
+Using the `app.bind` method, you can extend the app object
+
+```javascript
+app.bind({
+    //say hello
+    hello: function(){ return 'world'; }
+});
+```
+
+
+### app.add
+Using the `app.add` method, you can add more items to the app config options
+
+```javascript
+//single - append to existing object
+app.config.searchSuffixes = app.add([
+    {
+        active: false,
+        name: 'white_paper_pdf',
+        value: ' white paper pdf'
+    },
+    {
+        active: false,
+        name: 'blockchain_whitepaper_com',
+        value: ' "blockchain" "whitepaper" pdf ".com"'
+    }
+], app.config.searchSuffixes );
+```
+
+### app.setActiveConfig
+Using the `app.setActiveConfig` method, you can set an item in config options as active
+
+```javascript
+//single - append to existing object
+app.setActiveConfig( 'searchSuffixes', 'white_paper_pdf' );
+```
+
 
 ## Installing the Extension
 
