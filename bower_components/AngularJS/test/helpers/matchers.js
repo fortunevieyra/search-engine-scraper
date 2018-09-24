@@ -1,0 +1,359 @@
+'use strict';
+
+beforeEach(function() {
+
+  function cssMatcher(presentClasses, absentClasses) {
+    return function() {
+      return {
+        compare: function(actual) {
+          var element = angular.element(actual);
+          var present = true;
+          var absent = false;
+
+          angular.forEach(presentClasses.split(' '), function(className) {
+            present = present && element.hasClass(className);
+          });
+
+          angular.forEach(absentClasses.split(' '), function(className) {
+            absent = absent || element.hasClass(className);
+          });
+
+          var message = function() {
+            return "Expected to have " + presentClasses +
+              (absentClasses ? (" and not have " + absentClasses + "") : "") +
+              " but had " + element[0].className + ".";
+          };
+          return {
+            pass: present && !absent,
+            message: message
+          };
+        }
+      };
+    };
+  }
+
+  function isNgElementHidden(element) {
+    // we need to check element.getAttribute for SVG nodes
+    var hidden = true;
+    forEach(angular.element(element), function(element) {
+      if ((' '  + (element.getAttribute('class') || '') + ' ').indexOf(' ng-hide ') === -1) {
+        hidden = false;
+      }
+    });
+    return hidden;
+  }
+
+  jasmine.addMatchers({
+    toBeEmpty: cssMatcher('ng-empty', 'ng-not-empty'),
+    toBeNotEmpty: cssMatcher('ng-not-empty', 'ng-empty'),
+    toBeInvalid: cssMatcher('ng-invalid', 'ng-valid'),
+    toBeValid: cssMatcher('ng-valid', 'ng-invalid'),
+    toBeDirty: cssMatcher('ng-dirty', 'ng-pristine'),
+    toBePristine: cssMatcher('ng-pristine', 'ng-dirty'),
+    toBeUntouched: cssMatcher('ng-untouched', 'ng-touched'),
+    toBeTouched: cssMatcher('ng-touched', 'ng-untouched'),
+    toBeAPromise: function() {
+      return {
+        compare: generateCompare(false),
+        negativeCompare: generateCompare(true)
+      };
+      function generateCompare(isNot) {
+        return function(actual) {
+          var message = valueFn(
+            "Expected object " + (isNot ? "not " : "") + "to be a promise");
+          return { pass: isPromiseLike(actual), message: message };
+        };
+      }
+    },
+    toBeShown: function() {
+      return {
+        compare: generateCompare(false),
+        negativeCompare: generateCompare(true)
+      };
+      function generateCompare(isNot) {
+        return function(actual) {
+          var message = valueFn("Expected element " + (isNot ? "" : "not ") + "to have 'ng-hide' class");
+          var pass = !isNgElementHidden(actual);
+          if (isNot) {
+            pass = !pass;
+          }
+          return { pass: pass, message: message };
+        };
+      }
+    },
+    toBeHidden: function() {
+      return {
+        compare: generateCompare(false),
+        negativeCompare: generateCompare(true)
+      };
+      function generateCompare(isNot) {
+        return function(actual) {
+          var message = valueFn("Expected element " + (isNot ? "not " : "") + "to have 'ng-hide' class");
+          var pass = isNgElementHidden(actual);
+          if (isNot) {
+            pass = !pass;
+          }
+          return { pass: pass, message: message };
+        };
+      }
+    },
+
+    toEqual: function(util) {
+      return {
+        compare: function(actual, expected) {
+          if (actual && actual.$$log) {
+            actual = (typeof expected === 'string')
+                ? actual.toString()
+                : actual.toArray();
+          }
+          return {
+            pass: util.equals(actual, expected, [DOMTester])
+          };
+        }
+      };
+
+      function DOMTester(a, b) {
+        if (a && b && a.nodeType > 0 && b.nodeType > 0) {
+          return a === b;
+        }
+      }
+    },
+
+    toEqualData: function() {
+      return {
+        compare: function(actual, expected) {
+          return { pass: angular.equals(actual, expected) };
+        }
+      };
+    },
+
+    toHaveBeenCalledOnce: function() {
+      return {
+        compare: function(actual) {
+          if (arguments.length > 1) {
+            throw new Error('toHaveBeenCalledOnce does not take arguments, use toHaveBeenCalledWith');
+          }
+
+          if (!jasmine.isSpy(actual)) {
+            throw new Error('Expected a spy, but got ' + jasmine.pp(actual) + '.');
+          }
+
+          var message = function() {
+            var msg = 'Expected spy ' + actual.identity() + ' to have been called once, but was ',
+                count = this.actual.calls.count();
+            return [
+              count === 0 ? msg + 'never called.' :
+                            msg + 'called ' + count + ' times.',
+              msg.replace('to have', 'not to have') + 'called once.'
+            ];
+          };
+
+          return {
+            pass: actual.calls.count() == 1,
+            message: message
+          };
+        }
+      };
+    },
+
+    toHaveBeenCalledOnceWith: function(util, customEqualityTesters) {
+      return {
+        compare: function(actual) {
+          var expectedArgs = Array.prototype.slice.call(arguments, 1);
+          if (!jasmine.isSpy(actual)) {
+            throw new Error('Expected a spy, but got ' + jasmine.pp(actual) + '.');
+          }
+          var message = function() {
+            if (actual.calls.count() != 1) {
+              if (actual.calls.count() === 0) {
+                return [
+                  'Expected spy ' + actual.identity() + ' to have been called once with ' +
+                    jasmine.pp(expectedArgs) + ' but it was never called.',
+                  'Expected spy ' + actual.identity() + ' not to have been called with ' +
+                    jasmine.pp(expectedArgs) + ' but it was.'
+                ];
+              }
+
+              return [
+                'Expected spy ' + actual.identity() + ' to have been called once with ' +
+                  jasmine.pp(expectedArgs) + ' but it was called ' + actual.calls.count() + ' times.',
+                'Expected spy ' + actual.identity() + ' not to have been called once with ' +
+                  jasmine.pp(expectedArgs) + ' but it was.'
+              ];
+            } else {
+              return [
+                'Expected spy ' + actual.identity() + ' to have been called once with ' +
+                  jasmine.pp(expectedArgs) + ' but was called with ' + jasmine.pp(actual.calls.argsFor(0)),
+                'Expected spy ' + actual.identity() + ' not to have been called once with ' +
+                  jasmine.pp(expectedArgs) + ' but was called with ' + jasmine.pp(actual.calls.argsFor(0))
+              ];
+            }
+          };
+          return {
+            pass: actual.calls.count() === 1 && util.equals(actual.calls.argsFor(0), expectedArgs),
+            message: message
+          };
+        }
+      };
+    },
+
+    toBeOneOf: function() {
+      return {
+        compare: function(actual) {
+          var expectedArgs = Array.prototype.slice.call(arguments, 1);
+          return { pass: expectedArgs.indexOf(actual) !== -1 };
+        }
+      };
+    },
+
+    toHaveClass: function() {
+      return {
+        compare: generateCompare(false),
+        negativeCompare: generateCompare(true)
+      };
+      function generateCompare(isNot) {
+        return function(actual, clazz) {
+          var message = function() {
+            return "Expected '" + angular.mock.dump(actual) + "'" + (isNot ? " not " : "") + " to have class '" + clazz + "'.";
+          };
+          var classes = clazz.trim().split(/\s+/);
+          for (var i = 0; i < classes.length; ++i) {
+            if (!jqLiteHasClass(actual[0], classes[i])) {
+              return { pass: isNot };
+            }
+          }
+          return { pass: !isNot };
+        };
+      }
+    },
+
+    toThrowMinErr: function() {
+      return {
+        compare: generateCompare(false),
+        negativeCompare: generateCompare(true)
+      };
+      function generateCompare(isNot) {
+        return function(actual, namespace, code, content) {
+          var result,
+            exception,
+            exceptionMessage = '',
+            escapeRegexp = function(str) {
+              // This function escapes all special regex characters.
+              // We use it to create matching regex from arbitrary strings.
+              // http://stackoverflow.com/questions/3446170/escape-string-for-use-in-javascript-regex
+              return str.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&");
+            },
+            codeRegex = new RegExp('^\\[' + escapeRegexp(namespace) + ':' + escapeRegexp(code) + '\\]'),
+            not = isNot ? "not " : "",
+            regex = jasmine.isA_("RegExp", content) ? content :
+                      angular.isDefined(content) ? new RegExp(escapeRegexp(content)) : undefined;
+
+          if (!angular.isFunction(actual)) {
+            throw new Error('Actual is not a function');
+          }
+
+          try {
+            actual();
+          } catch (e) {
+            exception = e;
+          }
+
+          if (exception) {
+            exceptionMessage = exception.message || exception;
+          }
+
+          var message = function() {
+            return "Expected function " + not + "to throw " +
+              namespace + "MinErr('" + code + "')" +
+              (regex ? " matching " + regex.toString() : "") +
+              (exception ? ", but it threw " + exceptionMessage : ".");
+          };
+
+          result = codeRegex.test(exceptionMessage);
+          if (!result) {
+            if (isNot) {
+              return { pass: !result, message: message };
+            } else {
+              return { pass: result, message: message };
+            }
+          }
+
+          if (angular.isDefined(regex)) {
+            if (isNot) {
+              return { pass: !regex.test(exceptionMessage), message: message };
+            } else {
+              return { pass: regex.test(exceptionMessage), message: message };
+            }
+          }
+          if (isNot) {
+            return { pass: !result, message: message };
+          } else {
+            return { pass: result, message: message };
+          }
+        };
+      }
+    }
+  });
+});
+
+/**
+ * Create jasmine.Spy on given method, but ignore calls without arguments
+ * This is helpful when need to spy only setter methods and ignore getters
+ */
+function spyOnlyCallsWithArgs(obj, method) {
+  var originalFn = obj[method];
+  var spy = spyOn(obj, method);
+  obj[method] = function() {
+    if (arguments.length) return spy.apply(this, arguments);
+    return originalFn.apply(this);
+  };
+  return spy;
+}
+
+// Minimal implementation to mock what was removed from Jasmine 1.x
+function createAsync(doneFn) {
+  function Job() {
+    this.next = [];
+  }
+  Job.prototype.done = function() {
+    return this.runs(doneFn);
+  };
+  Job.prototype.runs = function(fn) {
+    var newJob = new Job();
+    this.next.push(function() {
+      fn();
+      newJob.start();
+    });
+    return newJob;
+  };
+  Job.prototype.waitsFor = function(fn, error, timeout) {
+    var newJob = new Job();
+    timeout = timeout || 5000;
+    this.next.push(function() {
+      var counter = 0,
+        intervalId = window.setInterval(function() {
+          if (fn()) {
+            window.clearInterval(intervalId);
+            newJob.start();
+          }
+          counter += 5;
+          if (counter > timeout) {
+            window.clearInterval(intervalId);
+            throw new Error(error);
+          }
+        }, 5);
+    });
+    return newJob;
+  };
+  Job.prototype.waits = function(timeout) {
+    return this.waitsFor(function() { return true; }, undefined, timeout);
+  };
+  Job.prototype.start = function() {
+    var i;
+    for (i = 0; i < this.next.length; i += 1) {
+      this.next[i]();
+    }
+  };
+  return new Job();
+}
+

@@ -1,0 +1,428 @@
+
+<!-- saved from url=(0078)http://developer.chrome.com/extensions/examples/api/bookmarks/basic/popup.html -->
+<html ng-app="app">
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+		<!-- STYLESHEET DEPENDENCIES -->
+		<link href="./bower_components/animate.css/animate.min.css" rel="stylesheet">
+		<link href="./bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+		<link href="./bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+		<link href="./bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+
+		<!-- APPLICATION STYLESHEET -->
+		<link href="./css/app.css" rel="stylesheet">
+
+		<!-- JAVASCRIPT DEPENDENCIES -->
+		<script src="./bower_components/jquery/dist/jquery.min.js"></script>
+		<script src="./bower_components/angular/angular.min.js"></script>
+		<script src="./bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+		<script src="./bower_components/underscore/underscore-min.js"></script>
+
+		<!-- APPLICATION JAVASCRIPT -->
+		<script src="./js/core.js"></script>
+		<script src="./js/config.js"></script>
+		<script src="./js/extend.js"></script>
+		<script src="./js/init.js"></script>
+	</head>
+	<body ng-controller="main">
+
+		<div id="notify" class="alert alert-info">
+			<div id="message"></div>
+			<button type="button" class="close" data-dismiss="alert">&times;</button>
+		</div>
+
+		<div class="page-header">
+			<h1>Search Engine Scraper<br> <small>Search, Scrape and Export Results!</small></h1>
+			<nav class="navbar navbar-default">
+			  <div class="container-fluid" id="header-container">
+			    <form class="navbar-form navbar-left" 
+			      		role="search" 
+			      		id="searchForm" 
+			      		ng-submit="app.setSearch(searchText)"
+			    >
+			        <div class="form-group">
+			        	<span class="fa fa-2x fa-{{ app.searchService.icon || 'search'}}"></span>
+			          	<input type="text" 
+					  		 class="form-control" 
+					  		 ng-model="searchText" 
+					  		 aria-label="Search {{ app.searchService.name }}..." 
+					  		 placeholder="Search {{ app.searchService.name }}..." 
+					  		 ng-keyup="app.setKeyup('search',searchText)" 
+					  		 value="{{ app.searchService.text }}"
+					  	>
+			          	<button type="submit" 
+			          		  class="btn btn-default"
+			          		  ng-click="app.setSearch(searchText)" 
+			          		  id="searchButton" 
+			          		  title="Searching with {{ app.searchService.name }}"
+			          	>Submit</button>
+			          	<button type="reset" 
+			          		  class="btn btn-secondary"
+			          		  ng-click="app.setReset()" 
+			          		  id="resetButton" 
+			          		  title="Reset LocalStorage"
+			          	>Reset</button>
+			        </div>
+			    </form>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+					  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+					  	<span>Settings</span> 
+					  	<span class="caret"></span>
+					  </a>
+					    <ul class="dropdown-menu dropdown-menu-right" id="appSettings">
+					      <li ng-repeat="setting in app.appSettings track by $index"
+					      	  ng-class="setting.active ? 'active' : ''"
+					      >
+					      	<a href="#" ng-click="app.openSettings(setting)">
+					      	   <span class="fa fa-{{ setting.active == true ? 'check-circle' : 'circle-o' }}"></span> {{ setting.value }}
+					      	</a>
+					      </li>
+					    </ul>
+					</li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+					  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+					  	<span>Crawler</span> 
+					  	<span class="caret"></span>
+					  </a>
+					    <ul class="dropdown-menu dropdown-menu-right" id="searchCrawler">
+					      <li ng-repeat="crawler in app.searchCrawlers track by $index"
+					      	  ng-class="app.searchCrawler.index == crawler.index ? 'active' : ''"
+					      >
+					      	<a href="#" ng-click="app.setCrawler('search', crawler)">
+					      	   <span class="fa fa-{{ crawler.active == true ? 'check-circle' : 'circle-o' }}"></span> {{ crawler.name }}
+					      	</a>
+					      </li>
+					    </ul>
+					</li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+					  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+					  	<span>Suffix</span> 
+					  	<span class="caret"></span>
+					  </a>
+					    <ul class="dropdown-menu dropdown-menu-right" id="searchSuffix">
+					      <li ng-repeat="suffix in app.searchSuffixes track by $index"
+					      	  ng-class="app.searchSuffix.index == suffix.index ? 'active' : ''"
+					      >
+					      	<a href="#" 
+					      	   ng-click="app.setSuffix('search', suffix)"
+					      	>{{ suffix.value }}</a>
+					      </li>
+					    </ul>
+					</li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+					  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+					  	<span>Service</span> 
+					  	<span class="caret"></span>
+					  </a>
+					    <ul class="dropdown-menu dropdown-menu-right" id="searchService"`>
+					      <li ng-repeat="service in app.searchServices track by $index"
+					      	  ng-class="app.searchService.index == service.index ? 'active' : ''" 
+					      	  ng-if="service.enable == true"
+					      >
+					      	<a href="#" 
+					      	   ng-click="app.setService('search', service)"
+					      	>
+					      	   <span class="fa fa-{{ service.icon || 'search'}}"></span> {{ service.name }}
+					      	</a>
+					      </li>
+					    </ul>
+					</li>
+				</ul>
+				<ul class="nav navbar-nav navbar-right">
+					<li class="dropdown">
+					  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+					  	<span>History ({{ app.searchHistory.length }})</span> 
+					  	<span class="caret"></span>
+					  </a>
+					    <ul class="dropdown-menu dropdown-menu-right" id="searchHistory"
+					    	ng-show="app.searchHistory.length > 0"
+					    >
+					      <li ng-repeat="shist in app.searchHistory track by $index"
+					      	  ng-class="shist.text == app.searchService.text ? 'active' : ''" 
+					      >
+					      	<a href="#" 
+					      	   ng-click="app.searchService.text = shist.text"
+					      	>
+					      	   <span class="fa fa-search"></span> {{ shist.text }}
+					      	</a>
+					      </li>
+					    </ul>
+					</li>
+				</ul>
+			  </div><!-- /.container-fluid -->
+			</nav>
+			<a href="#" 
+			   ng-click="app.openWindow(app.setUrl())" 
+			   ng-hide="app.searching"
+			   class="topPageURL"
+			>
+				<sub ng-show="app.isKeyup.search">{{ ( app.setUrl() + '' ).substr(0, 140) }}</sub>
+			</a>
+			<div ng-show="app.searching" 
+				 ng-hide="app.timer==0"
+				 id="timer-message" 
+			> Injecting script on {{ app.searchService.name }} in <span>{{ app.timer }}</span> seconds</div>
+		</div>
+
+		<div class="container col-md-12 bottomSection">
+			<ul class="nav nav-tabs" id="main-nav">
+				<li role="presentation" 
+					  ng-repeat="tab in app.mainTabs" 
+					  ng-class="app.mainTab == tab.name ? 'active' : ''"
+				>
+					<a href="#" ng-click="app.setTab('main',tab.name)">
+						{{ tab.text }}
+						<span class="badge" ng-if="tab.total > 0">{{ tab.total }}</span>
+					</a>
+				</li>
+			</ul>
+
+			<div class="col-md-12 row section-content" 
+				 id="searchBody" 
+				 ng-show="app.mainTab == 'search' "
+			>
+				<ul class="nav nav-pills" 
+					ng-show="app.currentResults.length > 0"
+				>
+				  <li role="presentation" 
+				  	  ng-repeat="tab in app.serviceTab[app.searchService.name]" 
+				  	  ng-click="app.getCurrentServiceTab(tab)"
+				  	  ng-class="app.currentServiceTab.index == tab.index ? 'active' : ''"
+				  >
+				  	{{ tab.text }}
+				  </li>
+				</ul>
+				<div class="col-md-12 no-padding">
+					<div class="row col-md-12">
+						<h3> 
+							<span ng-show="app.currentResults.length > 0">
+								<b>{{ app.currentResults.length }}</b> Results for {{ app.currentServiceTab.text }}
+							</span>
+							<span ng-show="app.currentResults.length == 0">
+								No search results yet..
+							</span>
+						</h3>
+					</div>
+					<hr>
+					<ul class="media-list" 
+						ng-show="app.currentResults.length > 0"
+					>
+					  <li class="media"
+					  	  ng-repeat="result in app.currentResults track by $index">
+					    <div class="media-body">
+					      <h4 class="media-heading">{{ result.title }}</h4>
+					      <a href="#" 
+					      	 class="link" 
+					      	 ng-click="app.openWindow(result.url)"
+					      >{{ result.url }}</a>
+					      <p>{{ result.descr }}</p>
+					    </div>
+					  </li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="col-md-12 row section-content" id="collectionBody" ng-show="app.mainTab == 'collection' ">
+				<div class="col-md-12 no-padding">
+					<div class="row col-md-12">
+						<h3> 
+							<span ng-show="app.searchCollection.length > 0">
+								<b>{{ app.searchCollection.length }}</b> Collections Found
+							</span>
+							<span ng-show="app.searchCollection.length == 0">
+								No collections found..
+							</span>
+						</h3>
+					</div>
+					<hr>
+					<ul class="media-list" 
+						ng-show="app.searchCollection.length > 0"
+					>
+					  <li class="media"
+					  	  ng-repeat="collection in app.searchCollection track by $index">
+					    <div class="media-body">
+					      <h4 class="media-heading">
+					      	<img src="{{ collection.sender.tab.favIconUrl }}" class="icon" /> 
+					      	{{ collection.sender.tab.title }} - {{ collection.sender.id }}
+					      </h4>
+					      <a href="#" 
+					      	 class="link" 
+					      	 ng-click="app.openWindow(collection.sender.tab.url)"
+					      >{{ collection.message.options.service.text  }}</a>
+					      <p>{{ collection.message.results.length }} Results Sets Found</p>
+					    </div>
+					  </li>
+					</ul>
+				</div>
+			</div>
+
+			<div class="col-md-12 row section-content" id="postcommentBody" ng-show="app.mainTab == 'comment' ">
+				Post comments coming soon..
+			</div>
+
+			<div class="col-md-12 row section-content" id="uploadfileBody" ng-show="app.mainTab == 'upload' ">
+				<div class="col-md-12 no-padding">
+					<div class="row col-md-12">
+						<div class="form-group width-60 left">
+						 	<label class="col-md-4 control-label" for="uploadFile">Upload File</label>
+						 	<div class="col-md-4">
+							    <div class="input-group">
+							      <input id="uploadFile" name="uploadFile" class="form-control" placeholder="i.e. some_file.csv" type="file">
+							      <span class="input-group-addon btn btn-default" ng-click="app.uploadFile()">Upload</span>
+							    </div>
+								<div id="uploadLoading" class="progress" ng-hide="!app.uploading">
+								  <div class="progress-bar" role="progressbar" aria-valuenow="70"
+								  aria-valuemin="0" aria-valuemax="100" style="width:0%">
+								    <span class="sr-only">0% Complete</span>
+								  </div>
+								</div>
+							</div>
+						</div>
+						<ul class="nav navbar-nav navbar-right width-20 right uploadFIleMenu">
+							<li class="dropdown">
+							  <a href="#" class="dropdown-toggle p5" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+							  	<span>Uploaded Files ({{ app.uploadedFiles.length }})</span> 
+							  	<span class="caret"></span>
+							  </a>
+							    <ul class="dropdown-menu dropdown-menu-right" id="uploadedFiles"
+							    	ng-show="app.uploadedFiles.length > 0" 
+							    >
+							      <li ng-repeat="file in app.uploadedFiles track by $index"
+							      	  ng-class="app.activeFile.name == file.name ? 'active' : ''" 
+							      >
+							      	<a href="#" 
+							      	   ng-click="app.setActiveFile( file )"
+							      	>
+							      	   <span class="fa fa-file"></span> {{ file.name }}
+							      	</a>
+							      </li>
+							    </ul>
+							</li>
+						</ul>
+						<ul class="nav navbar-nav navbar-right width-20 right uploadFIleMenu" ng-show="app.activeFile !== ''" >
+							<li class="dropdown">
+							  <a href="#" class="dropdown-toggle p5" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+							  	<span>Set File Action</span> 
+							  	<span class="caret"></span>
+							  </a>
+							    <ul class="dropdown-menu dropdown-menu-right">
+							      <li ng-repeat="action in app.fileActions track by $index">
+							      	<a href="#" ng-click="app.setFileAction( action.name )">
+							      	   <span class="fa fa-file"></span> {{ action.text }}
+							      	</a>
+							      </li>
+							    </ul>
+							</li>
+						</ul>
+						<div class="clear"><hr></div>
+						<div class="uploadFileHeader" ng-show="app.activeFile != ''">
+							<strong>{{ app.activeFile.name }}</strong>
+							<span class="right"><strong>Size:</strong> {{ app.byteSize( app.activeFile.size || 0 ) }} </span>
+							<span class="right"><strong>Type:</strong> {{ app.activeFile.type }} </span> 
+						</div>
+						<textarea id="fileReader">{{ app.getFileReader() }}</textarea>
+					</div>
+				</div>
+			</div>
+
+			<div class="col-md-12 row section-content" id="operationBody" ng-show="app.mainTab == 'process' ">
+				<div class="col-md-12 no-padding">
+					<div class="row col-md-12">
+						<h4 ng-show="app.batchFiltered.length == 0"> 
+							<span>
+								No Batch Operation Actived..
+							</span>
+						</h4>
+						<div class="block" ng-show="app.batchFiltered.length > 0">
+							<div class="form-group">
+								<div class="block"> 
+									<span>
+										<strong> Batch Name: </strong> {{ app.batchOperation.name }}
+									</span>
+									<button class="btn btn-sm btn-{{ app.batchOperation.started ? 'default' : 'default hide' }} p5 right nextProcess" 
+											ng-click="app.runBatchOperation(true, (app.batchOperation.position + 1) )" 
+											ng-disabled="app.batchOperation.position === 1" 
+									>&gt;&gt;</button>
+									<button class="btn btn-sm btn-{{ app.batchOperation.started ? 'danger' : 'success' }} p5 right startProcess" 
+											ng-click="app.runBatchOperation()"
+									>
+										{{ app.batchOperation.started ? 'Stop' : 'Start' }} Process
+									</button>
+									<button class="btn btn-sm btn-{{ app.batchOperation.started ? 'default' : 'default hide' }} p5 right backProcess" 
+											ng-click="app.runBatchOperation(true, (app.batchOperation.position - 1) )" 
+											ng-disabled="app.batchOperation.position === app.batchFiltered.length" 
+									>&lt;&lt;</button>
+									<span class="right mr-20">
+										<strong> Batch: </strong> <span id="batchPosition">{{ app.getBatchPosition() }}</span> of {{ app.batchFiltered.length }}
+									</span>
+								</div>
+								<hr>
+								<label class="control-label left" for="checkboxes">Exclude Column:&nbsp;&nbsp;</label>
+								<div class="left">
+							    	<label class="checkbox-inline" 
+							    		   ng-repeat="column in app.batchFirstRow track by $index" 
+							    		   for="checkboxes-{{ $index }}" 
+							    		   ng-class=" ( app.batchOperation.exclude.indexOf( $index ) !== -1 ) ? 'active' : '' " 
+							    		   ng-click="app.setBatchExclude( $index )" 
+							    	>
+							    		<input type="hidden" name="checkboxes" id="checkboxes-{{ $index }}" value="{{ $index }}">
+							      		<span>{{ ( column + '').substr(0,15) }}</span>
+							    	</label>
+								</div>
+							</div>
+						</div>
+					</div>
+					<ul class="media-list block clear" 
+						ng-show="app.batchFiltered.length > 0" 
+						id="batch-list"
+					>
+					  <li class="media row"
+					  	  ng-repeat="filtered in app.batchFiltered track by $index"
+					  	  id="batch-{{ $index }}"
+					  >
+					  	<strong>{{ ( $index + 1 ) }}</strong>
+					    <a href="#" 
+					      	 class="link"  
+					      	 ng-click="app.runBatchOperation( true, $index )" 
+					    >{{ filtered }}</a>
+					  </li>
+					</ul>
+				</div>
+			</div>
+		</div>
+		<div class="clear"></div>
+		<div id="runcode">
+			<div id="bbody">
+				<span class="icon-resize-full" id="bresize"></span> 
+				<textarea id="bcode" placeholder="Enter Browser Code Here.."></textarea>
+				<input type="text" id="bname" value="" placeholder="Save script as">
+				<button type="button" class="btn btn-warning" id="brun">Run</button>
+				<select id="brsel"><option value="">Open script..</option></select>
+			</div>
+			<div id="abody">
+				<span class="icon-resize-full" id="aresize"></span> 
+				<textarea id="acode" placeholder="Enter App Code Here.."></textarea>
+				<input type="text" id="aname" value="" placeholder="Save script as">
+				<button type="button" class="btn btn-warning" id="arun">Run</button>
+				<select id="arsel"><option value="">Open script..</option></select>
+			</div>
+		</div>
+		<div id="notes" contentEditable="true">
+
+		</div>
+		<!-- 
+			POST https://www.googleapis.com/urlshortener/v1/url
+			Content-Type: application/json
+
+			{"longUrl": "http://www.google.com/"}
+		-->
+	</body>
+</html>

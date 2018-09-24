@@ -1,0 +1,37 @@
+
+<!-- saved from url=(0078)http://developer.chrome.com/extensions/examples/api/bookmarks/basic/popup.html -->
+<html ng-app="app">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+        <!-- LOAD ALL STYLESHEET FILES -->
+        <link href="./bower_components/animate.css/animate.min.css" rel="stylesheet">
+        <link href="./bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+        <link href="./bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="./bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+        <link href="./bower_components/material-design-icons/www/css/material.css" rel="stylesheet">
+        <link href="./css/app.css" rel="stylesheet">
+
+        <!-- LOAD ALL JAVASCRIPT FILES -->
+        <script src="./bower_components/jquery/dist/jquery.min.js"></script>
+        <script src="./bower_components/async/dist/async.min.js"></script>
+        <script src="./bower_components/angular/angular.min.js"></script>
+        <!--script src="./bower_components/blueimp-file-upload/js/jquery.fileupload.js"></script>
+        <script src="./bower_components/blueimp-file-upload/js/jquery.fileupload-ui.js"></script>
+        <script src="./bower_components/blueimp-file-upload/js/jquery.fileupload-angular.js"></script>
+        <script src="./bower_components/blueimp-file-upload/js/jquery.iframe-transport.js"></script-->
+        <script src="./bower_components/blueimp-canvas-to-blob/js/canvas-to-blob.min.js"></script>
+        <script src="./bower_components/webcomponentsjs/webcomponents.min.js"></script>
+        <script src="./bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="./bower_components/underscore/underscore-min.js"></script>
+        <script src="./js/app.js"></script>
+    </head>
+    <body ng-controller="main">
+      <iframe id="iframe" src=""></iframe>
+      <script type="text/javascript">
+        var url = decodeURI(document.location.search.split('?url=')[1]);
+        jQuery('#iframe').attr('src',url);
+      </script>
+    </body>
+</html>

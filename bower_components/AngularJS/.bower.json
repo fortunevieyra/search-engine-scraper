@@ -1,0 +1,21 @@
+{
+  "name": "AngularJS",
+  "license": "MIT",
+  "devDependencies": {
+    "jquery": "2.1.1",
+    "closure-compiler": "https://dl.google.com/closure-compiler/compiler-20140814.zip",
+    "ng-closure-runner": "https://raw.github.com/angular/ng-closure-runner/v0.2.3/assets/ng-closure-runner.zip"
+  },
+  "homepage": "https://github.com/angular/angular.js",
+  "version": "1.5.3",
+  "_release": "1.5.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "v1.5.3",
+    "commit": "cfffd1cd5607c0df03720614221c6b0e9c3e8189"
+  },
+  "_source": "git://github.com/angular/angular.js.git",
+  "_target": "^1.5.3",
+  "_originalSource": "tfeslee-temp",
+  "_direct": true
+}

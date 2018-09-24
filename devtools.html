@@ -1,0 +1,211 @@
+
+<!-- saved from url=(0078)http://developer.chrome.com/extensions/examples/api/bookmarks/basic/popup.html -->
+<html ng-app="app">
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+        <!-- LOAD ALL STYLESHEET FILES -->
+        <link href="./bower_components/animate.css/animate.min.css" rel="stylesheet">
+        <link href="./bower_components/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+        <link href="./bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="./bower_components/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet">
+        <link href="./bower_components/material-design-icons/www/css/material.css" rel="stylesheet">
+        <link href="./css/app.css" rel="stylesheet">
+
+        <!-- LOAD ALL JAVASCRIPT FILES -->
+        <script src="./bower_components/jquery/dist/jquery.min.js"></script>
+        <script src="./bower_components/async/dist/async.min.js"></script>
+        <script src="./bower_components/angular/angular.min.js"></script>
+        <!--script src="./bower_components/blueimp-file-upload/js/jquery.fileupload.js"></script>
+        <script src="./bower_components/blueimp-file-upload/js/jquery.fileupload-ui.js"></script>
+        <script src="./bower_components/blueimp-file-upload/js/jquery.fileupload-angular.js"></script>
+        <script src="./bower_components/blueimp-file-upload/js/jquery.iframe-transport.js"></script-->
+        <script src="./bower_components/blueimp-canvas-to-blob/js/canvas-to-blob.min.js"></script>
+        <script src="./bower_components/webcomponentsjs/webcomponents.min.js"></script>
+        <script src="./bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+        <script src="./bower_components/underscore/underscore-min.js"></script>
+        <script src="./js/app.js"></script>
+    </head>
+    <body ng-controller="main">
+
+        <div id="notify" class="alert alert-info">
+            <div id="message"></div>
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+        </div>
+
+        <div class="page-header">
+            <h1>Ultimate Wordpress Comment Posting <small> <span class="fa fa-wordpress"></span> Free marketing done right!</small></h1>
+            <nav class="navbar navbar-default">
+              <div class="container-fluid">
+                <form class="navbar-form navbar-left" 
+                        role="search" 
+                        id="searchForm" 
+                        ng-submit="app.setSearch(searchText)"
+                >
+                    <div class="form-group">
+                        <span class="fa fa-2x fa-{{ app.searchService.icon || 'search'}}"></span>
+                        <input type="text" 
+                             class="form-control" 
+                             ng-model="searchText" 
+                             aria-label="Search {{ app.searchService.name }}..." 
+                             placeholder="Search {{ app.searchService.name }}..." 
+                             ng-keyup="app.setKeyup('search',searchText)" 
+                             value="{{ app.searchService.text }}"
+                        >
+                        <button type="submit" 
+                              class="btn btn-default"
+                              ng-click="app.setSearch(searchText)" 
+                              id="searchButton" 
+                              title="Searching with {{ app.searchService.name }}"
+                        >Search</button>
+                    </div>
+                  </form>
+                  <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Crawler</span> 
+                        <span class="caret"></span>
+                      </a>
+                        <ul class="dropdown-menu dropdown-menu-right" id="searchCrawler">
+                          <li ng-repeat="crawler in app.searchCrawler track by $index"
+                              ng-class="crawler.active ? 'active' : ''"
+                          >
+                            <a href="#" ng-click="app.setCrawler(crawler.index)">
+                               <span class="fa fa-{{ crawler.active ? 'check-circle' : 'circle-o' }}"></span> {{ crawler.name }}
+                            </a>
+                          </li>
+                        </ul>
+                    </li>
+                  </ul>
+                  <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Suffix</span> 
+                        <span class="caret"></span>
+                      </a>
+                        <ul class="dropdown-menu dropdown-menu-right"
+                            ng-model="app.searchSuffix" 
+                            ng-change="app.searchSuffix=suffix"
+                            id="searchSuffix"
+                        >
+                          <li ng-repeat="suffix in app.searchSuffixes track by $index"
+                              ng-class="app.searchSuffix.index == $index ? 'active' : ''"
+                          >
+                            <a href="#" 
+                               ng-click="app.setSuffix('search',$index)"
+                            >{{ suffix.value }}</a>
+                          </li>
+                        </ul>
+                    </li>
+                  </ul>
+                  <ul class="nav navbar-nav navbar-right">
+                    <li class="dropdown">
+                      <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
+                        <span>Service</span> 
+                        <span class="caret"></span>
+                      </a>
+                        <ul class="dropdown-menu dropdown-menu-right"
+                            ng-model="app.searchService" 
+                            ng-change="app.searchService=service"
+                            id="searchService"
+                        >
+                          <li ng-repeat="service in app.searchServices track by $index"
+                              ng-class="app.searchService.index == $index ? 'active' : ''"
+                          >
+                            <a href="#" 
+                               ng-click="app.setService('search',$index)"
+                            >
+                               <span class="fa fa-{{ service.icon || 'search'}}"></span> {{ service.name }}
+                            </a>
+                          </li>
+                        </ul>
+                    </li>
+                  </ul>
+              </div><!-- /.container-fluid -->
+            </nav>
+            <a href="{{ app.setUrl() }}" 
+               ng-hide="app.searching"
+            >
+                <sub ng-show="app.isKeyup.search">{{ app.setUrl() }}</sub>
+            </a>
+            <div ng-show="app.searching" 
+                 id="timer-message" 
+            > Injecting script on {{ app.searchService.name }} in <span>{{ app.timer }}</span> seconds</div>
+        </div>
+
+        <div class="container col-md-12">
+            <ul class="nav nav-tabs" id="main-nav">
+              <li role="presentation" 
+                  ng-repeat="tab in app.mainTabs" 
+                  ng-class="app.mainTab == tab.name ? 'active' : ''"
+              >
+                <a href="#" ng-click="app.setTab('main',tab.name)">
+                    {{ tab.text }}
+                    <span class="badge" ng-if="tab.total > 0">{{ tab.total }}</span>
+                </a>
+              </li>
+            </ul>
+
+            <div class="col-md-12 row section-content" id="searchBody" ng-show="app.mainTab == 'search' ">
+                <ul class="nav nav-pills" ng-show="app.searching">
+                  <li role="presentation" 
+                      ng-repeat="serviceTab in app.serviceTab[app.searchService]"
+                  >
+                    {{ serviceTab }}
+                  </li>
+                </ul>
+                <div class="col-md-12 no-padding">
+                    <div class="row col-md-12">
+                        <h3>{{ (app.searchService.text) ? 'Results for: ' + app.searchService.text : 'Nothing searched yet..' }}</h3>
+                    </div>
+                    <ul class="media-list">
+                      <li class="media">
+                        <div class="media-left">
+                          <span class="fa fa-2x fa-{{ app.searchService.icon || '...'}}"></span>
+                        </div>
+                        <div class="media-body">
+                          <h4 class="media-heading">{{ app.searchService.text }} {{ app.searchSuffix.value }}</h4>
+                          <a href="#" class="link">{{ app.searchService.url }}</a>
+                        </div>
+                      </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="col-md-12 row section-content" id="collectionBody" ng-show="app.mainTab == 'collection' ">
+                Collection coming soon ...
+            </div>
+
+            <div class="col-md-12 row section-content" id="postcommentBody" ng-show="app.mainTab == 'comment' ">
+                Post comments coming soon..
+            </div>
+        </div>
+        <div class="clear"></div>
+        <div id="runcode">
+            <div id="bbody">
+                <span class="icon-resize-full" id="bresize"></span> 
+                <textarea id="bcode" placeholder="Enter Browser Code Here.."></textarea>
+                <input type="text" id="bname" value="" placeholder="Save script as">
+                <button type="button" class="btn btn-warning" id="brun">Run</button>
+                <select id="brsel"><option value="">Open script..</option></select>
+            </div>
+            <div id="abody">
+                <span class="icon-resize-full" id="aresize"></span> 
+                <textarea id="acode" placeholder="Enter App Code Here.."></textarea>
+                <input type="text" id="aname" value="" placeholder="Save script as">
+                <button type="button" class="btn btn-warning" id="arun">Run</button>
+                <select id="arsel"><option value="">Open script..</option></select>
+            </div>
+        </div>
+        <div id="notes" contentEditable="true">
+
+        </div>
+        <!-- 
+            POST https://www.googleapis.com/urlshortener/v1/url
+            Content-Type: application/json
+
+            {"longUrl": "http://www.google.com/"}
+        -->
+    </body>
+</html>
