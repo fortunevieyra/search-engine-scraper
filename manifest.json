@@ -119,7 +119,7 @@
 
   //https://developer.chrome.com/extensions/omnibox
   "omnibox": {
-    "keyword": "UWCP"
+    "keyword": "SES"
   },
 
 
@@ -131,8 +131,8 @@
 
 
   "externally_connectable": {
-    "matches": ["*://*.ownasquare.com/*"]
+    "matches": []
   },
 
-  "content_security_policy": "script-src 'self' https://ownasquare.com/app/; object-src 'self'"
+  "content_security_policy": "script-src 'self'; object-src 'self'"
 }

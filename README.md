@@ -349,7 +349,7 @@ app.bind({
 Using the `app.add` method, you can add more items to the app config options
 
 ```javascript
-//single - append to existing object
+//append array of items to searchSuffixes
 app.config.searchSuffixes = app.add([
     {
         active: false,
@@ -368,7 +368,7 @@ app.config.searchSuffixes = app.add([
 Using the `app.setActiveConfig` method, you can set an item in config options as active
 
 ```javascript
-//single - append to existing object
+//set the white_paper_pdf item in app.config.searchSuffixes as active
 app.setActiveConfig( 'searchSuffixes', 'white_paper_pdf' );
 ```
 
@@ -386,5 +386,5 @@ MIT License. Copyright 2018 Fortune Vieyra
 
 
 ## Authors & contributors
-* Fortune Vieyra <fortune@gredger.com>
+* Fortune Vieyra '@fortune http://www.gredger.com'
 
