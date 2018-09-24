@@ -66,7 +66,7 @@ app.config.ajaxSettings = {
         // success: function(){ },
         // failure: function(){ },
         // always: function(){ }
-    },
+    }
 };
 ```
 
@@ -248,7 +248,8 @@ app.config.mainTabs = [
         name: 'process',
         text: 'Batch Process',
         total: 0
-}],
+    }
+];
 ```
 
 
@@ -340,7 +341,9 @@ Using the `app.bind` method, you can extend the app object
 ```javascript
 app.bind({
     //say hello
-    hello: function(){ return 'world'; }
+    hello: function(){ 
+        return 'world'; 
+    }
 });
 ```
 
